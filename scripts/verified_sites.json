@@ -1,0 +1,300 @@
+{
+  "_说明": "已验证的全国性检索入口库。跨项目复用：某公司要查人社部，别的项目也要查人社部。",
+  "_如何使用": [
+    "1. 先跑 python3 smoke_sites.py 做冒烟测试，确认哪些站点当前仍有效；",
+    "2. status=verified 的可直接用于批量留痕；",
+    "3. status=probed 的入口未精确化，首次使用前必须按 references/site-patterns.md",
+    "   的『入口必须从首页表单读出来』顺序重新确认，不要直接批量跑；",
+    "4. status=manual 的不要试图自动化，按 SKILL.md『人机配合』走；",
+    "5. status=disabled 的在修复并重新验证前不得产出证据。"
+  ],
+  "_status含义": {
+    "verified": "入口 URL/参数、exp 结果区文本均经实测确认，且用应当无结果的词验证过空结果措辞",
+    "probed": "脚本跑通过并人工核对过存档 PDF 内容，但入口是通用按钮探测得到的，参数未精确化",
+    "manual": "登录、验证码、实名或机构账号门槛，按纪律不绕过，转人工",
+    "disabled": "已知会产出错误结果，修复前停用"
+  },
+  "_exp字段": "实测时页面上实际出现的结果区文本。轮询到它才允许落盘；等不到就拒绝落盘并记入待人工。必须抄原文，不能凭印象写。",
+  "sites": {
+    "C17": {
+      "name": "人力资源和社会保障部",
+      "status": "verified",
+      "verified_at": "2026-08-31",
+      "type": "url",
+      "tmpl": "https://www.mohrss.gov.cn/hsearch/?searchword={q}",
+      "exp": [
+        "约找到",
+        "条结果"
+      ],
+      "empty_sample": "约找到0条结果 / 很抱歉，没有找到和您的查询相匹配的结果",
+      "note": "拆词严重：非零计数多为无关结果，务必按 SKILL.md 回显计数判据降级"
+    },
+    "C23": {
+      "name": "国家税务总局",
+      "status": "verified",
+      "verified_at": "2026-08-31",
+      "type": "url",
+      "tmpl": "https://www.chinatax.gov.cn/search5/html/searchResult.html?siteCode=bm29000002&searchWord={q}&left_right_index=0&searchSource=0",
+      "exp": [
+        "相关结果"
+      ],
+      "empty_sample": "相关结果0个 / 很抱歉！未能搜到您想要的内容",
+      "note": "siteCode 是站点标识码，不要改；searchWord 必须是主体名，曾误留成『发票查询』查出29条无关结果"
+    },
+    "C24": {
+      "name": "应急管理部",
+      "status": "verified",
+      "verified_at": "2026-08-31",
+      "type": "url",
+      "tmpl": "https://www.mem.gov.cn/was5/web/search?channelid=201309&sw={q}&perpage=15&page=1",
+      "exp": [
+        "全部网页结果共"
+      ],
+      "empty_sample": "全部网页结果共0条",
+      "note": "TRS WAS5。首页表单是 POST /was5/web/search，channelid=201309 从 hidden input 读得；实测 GET 等效。直接 GET /was5/web/search 不带参数只得到空的 TRSWAS5.1 页"
+    },
+    "C27": {
+      "name": "自然资源部",
+      "status": "verified",
+      "verified_at": "2026-08-31",
+      "type": "url_click",
+      "tmpl": "https://www.mnr.gov.cn/zwfwsxqd/sxqd/index.html?searchword={q}",
+      "click": [
+        "input[value=\"搜索\"]",
+        "button:has-text(\"搜索\")",
+        ".search-btn",
+        "a:has-text(\"搜索\")",
+        "input[type=button]"
+      ],
+      "exp": [
+        "暂无数据",
+        "共"
+      ],
+      "empty_sample": "暂无数据",
+      "note": "带 ?searchword= 打开不会自动检索，必须点搜索按钮，否则结果区从未渲染"
+    },
+    "C29": {
+      "name": "国家药品监督管理局",
+      "status": "verified",
+      "verified_at": "2026-08-31",
+      "type": "url",
+      "tmpl": "https://www.nmpa.gov.cn/so/s?qt={q}",
+      "exp": [
+        "未能搜到",
+        "相似信息",
+        "共",
+        "找到"
+      ],
+      "empty_sample": "很抱歉！未能搜到您想要的内容",
+      "note": "智能云搜索通用模式。旧的 searchResult.html?searchword= 会被静默重定向回首页，存下来是空白页；对不存在的词返回『相似信息 N条』（相似推荐），不是空结果，勿判无记录"
+    },
+    "C69": {
+      "name": "百度搜索",
+      "status": "verified",
+      "verified_at": "2026-08-31",
+      "type": "url",
+      "tmpl": "https://www.baidu.com/s?wd={q}",
+      "exp": [
+        "相关结果",
+        "百度为您找到",
+        "搜索工具"
+      ],
+      "note": "结果页标题含检索词，统计命中时必须剔除标题回显；『抱歉，出了点小问题』是站点故障不是无结果",
+      "smoke_probe": "北京",
+      "smoke_note": "搜索引擎空结果页措辞不稳定且生僻词易触发反爬，冒烟只验入口通不通，用常用词"
+    },
+    "C70": {
+      "name": "必应搜索",
+      "status": "verified",
+      "verified_at": "2026-08-31",
+      "type": "url",
+      "tmpl": "https://cn.bing.com/search?q={q}",
+      "exp": [
+        "个结果",
+        "条结果"
+      ],
+      "smoke_probe": "北京",
+      "smoke_note": "搜索引擎空结果页措辞不稳定且生僻词易触发反爬，冒烟只验入口通不通，用常用词"
+    },
+    "C71": {
+      "name": "微信公众号平台(搜狗微信)",
+      "status": "verified",
+      "verified_at": "2026-08-31",
+      "type": "url",
+      "tmpl": "https://weixin.sogou.com/weixin?type=2&query={q}",
+      "exp": [
+        "条相关",
+        "找到",
+        "微信公众号文章"
+      ],
+      "note": "批量跑易触发反爬，低并发并保留人工接管",
+      "smoke_probe": "北京",
+      "smoke_note": "搜索引擎空结果页措辞不稳定且生僻词易触发反爬，冒烟只验入口通不通，用常用词"
+    },
+    "C03": {
+      "name": "天眼查",
+      "status": "verified",
+      "verified_at": "2026-08-31",
+      "type": "url",
+      "tmpl": "https://www.tianyancha.com/search?key={q}",
+      "exp": [
+        "为您找到",
+        "条相关结果"
+      ],
+      "note": "直连搜索 URL 无需登录即可拿到列表；企查查同样路径会跳登录页"
+    },
+    "C04": {
+      "name": "12309中国检察网",
+      "status": "probed",
+      "url": "https://www.12309.gov.cn/",
+      "note": "点搜索开新标签，需捕获 popup"
+    },
+    "C08": {
+      "name": "中国仲裁网",
+      "status": "probed",
+      "url": "https://www.china-arbitration.com/",
+      "input": "input[name=keywords]",
+      "note": "HTTPS 证书过期，Chrome 需 --ignore-certificate-errors 才能打开；该站是否足以证明『全国仲裁无记录』需律师确认"
+    },
+    "C11": {
+      "name": "中国证券监督管理委员会",
+      "status": "probed",
+      "url": "https://www.csrc.gov.cn/",
+      "exp": [
+        "相关结果"
+      ],
+      "note": "已人工核对存档 PDF：对样本主体返回 3 条真实命中（行政处罚决定书、稽查典型案例），非拆词"
+    },
+    "C12": {
+      "name": "深圳证券交易所",
+      "status": "probed",
+      "url": "https://www.szse.cn/"
+    },
+    "C13": {
+      "name": "上海证券交易所",
+      "status": "probed",
+      "url": "https://www.sse.com.cn/",
+      "input": "#serinpt",
+      "button": ".js_searchBtn",
+      "note": "搜索按钮是 input[type=button].search_btn.js_searchBtn，无文字，按文本找不到"
+    },
+    "C16": {
+      "name": "国家市场监督管理总局行政处罚文书网",
+      "status": "probed",
+      "url": "https://cfws.samr.gov.cn/",
+      "exp": [
+        "共检索到"
+      ],
+      "empty_sample": "共检索到 0 篇文书 ,显示前0条"
+    },
+    "C18": {
+      "name": "生态环境部",
+      "status": "probed",
+      "url": "https://www.mee.gov.cn/"
+    },
+    "C21": {
+      "name": "工业和信息化部",
+      "status": "probed",
+      "url": "https://www.miit.gov.cn/"
+    },
+    "C22": {
+      "name": "国家国防科技工业局",
+      "status": "probed",
+      "url": "https://www.sastind.gov.cn/"
+    },
+    "C28": {
+      "name": "住房和城乡建设部",
+      "status": "probed",
+      "url": "https://www.mohurd.gov.cn/",
+      "note": "第30项『住房公积金监管司』与本项同域名不同栏目，需单独定位，不能用本项顶替"
+    },
+    "C01": {
+      "name": "国家企业信用信息公示系统",
+      "status": "manual",
+      "url": "https://www.gsxt.gov.cn/index.html",
+      "input": "#keyword",
+      "button": "button:has-text('查')",
+      "blocker": "极验滑块验证码（文字点选）",
+      "note": "首页有『环境检测/加载中』过渡页，输入框要轮询等待，固定 sleep 会误判 NO_INPUT。会话级验证：人过一次后同会话可批量"
+    },
+    "C05": {
+      "name": "中国裁判文书网",
+      "status": "manual",
+      "url": "https://wenshu.court.gov.cn/",
+      "blocker": "需登录",
+      "note": "自然人须按『当事人』字段(s17)检索，详见 references/china-judgments-online.md"
+    },
+    "C06": {
+      "name": "中国执行信息公开网",
+      "status": "manual",
+      "url": "https://zxgk.court.gov.cn/",
+      "blocker": "首页无检索框，点各模块进入后需实名登录",
+      "note": "自然人检索通常需身份证号"
+    },
+    "C07": {
+      "name": "人民法院公告网",
+      "status": "manual",
+      "url": "https://rmfygg.court.gov.cn/",
+      "blocker": "首页未找到检索入口，导航常超时",
+      "note": "需人工确认真实检索入口"
+    },
+    "C09": {
+      "name": "北京法院审判信息网",
+      "status": "manual",
+      "url": "https://www.bjcourt.gov.cn/",
+      "blocker": "知道创宇云防御浏览器安全检查，行为不稳定",
+      "note": "仅对注册在北京的主体适用，不要套用到全部主体"
+    },
+    "C15": {
+      "name": "证券期货市场失信记录查询平台",
+      "status": "manual",
+      "url": "https://neris.csrc.gov.cn/shixinchaxun/",
+      "input_names": [
+        "违法违规失信者姓名/名称",
+        "身份证号码/统一社会信用代码"
+      ],
+      "button": "span.searchBtn",
+      "blocker": "滑动验证码",
+      "note": "入口是 /shixinchaxun/ 子路径，不是 neris.csrc.gov.cn 根域名（根域名进去是 SSO 登录/无账号报错页，会被误判为需要机构账号）。表单两个字段都要填"
+    },
+    "C25": {
+      "name": "中华人民共和国公安部",
+      "status": "manual",
+      "url": "https://www.mps.gov.cn/",
+      "blocker": "需登录"
+    },
+    "C67": {
+      "name": "信用中国",
+      "status": "manual",
+      "url": "https://www.creditchina.gov.cn/",
+      "blocker": "验证码",
+      "note": "全站含地方子站均不支持自然人查询，董监高不列此渠道"
+    },
+    "C19": {
+      "name": "海关总署",
+      "status": "disabled",
+      "url": "https://www.customs.gov.cn/",
+      "reason": "站点侧 504：『知道创宇云防御节点工作正常/线路连接超时/服务器状态未知』，非本地问题，择期重试"
+    },
+    "C20": {
+      "name": "国家发展和改革委员会",
+      "status": "disabled",
+      "url": "https://so.ndrc.gov.cn/",
+      "reason": "WAF 静默拦截：HTTP 200 但 body 为空的 <html></html>，server 头为 WAF"
+    },
+    "C26": {
+      "name": "国家消防救援局",
+      "status": "disabled",
+      "url": "https://www.119.gov.cn/",
+      "reason": "搜索框在 DOM 中存在但 visible=False，触发元素定位不稳定，疑似反自动化检测；按不硬闯原则转人工"
+    },
+    "C72": {
+      "name": "巨潮资讯网",
+      "status": "disabled",
+      "url": "https://www.cninfo.com.cn/new/fulltextSearch",
+      "reason": "填框回车后仍返回『包含\"\"关键词的搜索结果 共 2511 条』——引号中间为空，2511 是全库条数，检索未生效",
+      "note": "页面有 3 个同 placeholder 的 el-input 且第 0 个不可见，详见 pitfalls.md"
+    }
+  },
+  "_smoke_probe字段": "冒烟测试专用检索词。默认用不存在的主体名（应返回空结果）；搜索引擎类空结果页无稳定标记且生僻词易触发反爬，改用必有结果的常用词，只验入口通不通。"
+}
